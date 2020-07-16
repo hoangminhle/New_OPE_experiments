@@ -22,7 +22,7 @@ config = {
     'n_trajectories': 256,
     'gamma': 0.99,
     'stochastic_env': False,
-    'n_experiments': 10,
+    'n_experiments': 1,
     'logdir': 'debug/gridworld/',
     'initial_seed': initial_seed,
     'baseline': ['IS', 'IH', 'MB'],
@@ -30,6 +30,7 @@ config = {
     'objective': ['bias_no_td_regW','bias_td_regW','bias_restricted_td_regW'],#['bias_no_td_regW','bias_td_regW','bias_no_td_no_regW','bias_td_no_regW'], #['bias_cf', 'bias_td_v2_cf'],#['bias_cf', 'bias_td_v1_cf', 'bias_td_v2_cf' ], #['bias_td_delay'], #['bias_td', 'bias'],
     'penalty_input': 1,
     'reg_w': 'linfty', #'linfty', #or 'l2'
+    'coeff_reg_w': 2, # 2 for infinity norm projection, 1e-4 for l2 regularization
     'v_class_cardinality':100,
     'normalizing_factor': 1,
     'n_iterations': 10000,
@@ -256,7 +257,7 @@ def main(cfg):
     display((estimate, squared_error))
     print('exp seed:', cfg.initial_seed)
     
-    pdb.set_trace()
+    # pdb.set_trace()
     if RUN_SANITY_CHECK:
         #! Let's run some additional sanity check
         #* check to see if bias formula checks out

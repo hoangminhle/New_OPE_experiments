@@ -6,8 +6,7 @@ import torch.nn.functional as F
 from collections import deque
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim import  LBFGS, RMSprop
-from optimizer import SGD,Adam, ExtraAdam, ModifiedAdam, ModifiedExtraAdam, ACGD, OptimisticAdam
-from manual_optimizer import AMSGrad, OptimisticAMSGrad
+from optimizer import ModifiedAdam
 import quadprog
 from scipy import optimize
 
@@ -212,15 +211,16 @@ class Tabular_State_MVM_Estimator(object):
         for i in range(1,cardinality):
             self.v_candidate[:,i] = (2*torch.rand(self.n_states,dtype=dtype)-1)+self.true.v_pi
         return self.v_candidate
-    def narrow_v_class(self, cardinality):
+
+    def form_restricted_v_class(self, cardinality):
         td_error_vector = self.td_error_vectorize(self.v_candidate)
         topk = torch.topk(td_error_vector,k=cardinality,largest=False)[1]
         self.v_candidate_narrow = self.v_candidate[:, topk].clone().detach()
         # pdb.set_trace()
-    # def optimize_g
+
     def optimize_finite_class(self, objective, td_penalty = None):
         # self.generate_random_v_class(100)
-        self.narrow_v_class(10)
+        self.form_restricted_v_class(10)
         self.w = torch.rand(self.n_states, dtype=dtype)
         n_iterations = self.config.n_iterations
         lr_decay = self.config.lr_decay
@@ -248,7 +248,7 @@ class Tabular_State_MVM_Estimator(object):
                 self.L_w = self.bias_squared_incremental(self.w, self.v)
             elif objective == 'bias_no_td_regW' or objective == 'bias_td_regW' or objective == 'bias_restricted_td_regW':
                 if self.config.reg_w == 'l2':
-                    self.L_w = self.bias_squared_incremental(self.w, self.v) + 1e-4*torch.norm(self.w)**2#+1*((self.w*self.d_mu).sum()-1)**2
+                    self.L_w = self.bias_squared_incremental(self.w, self.v) + self.config.coeff_reg_w*torch.norm(self.w)**2#+1*((self.w*self.d_mu).sum()-1)**2
                 elif self.config.reg_w == 'linfty':
                     self.L_w = self.bias_squared_incremental(self.w, self.v)
             self.L_w.backward()
@@ -260,7 +260,7 @@ class Tabular_State_MVM_Estimator(object):
             optimizer_w.step()
             self.w.requires_grad = False
             if self.config.reg_w == 'linfty':
-                torch.clamp_(self.w, min=0, max=2)
+                torch.clamp_(self.w, min=0, max=self.config.coeff_reg_w)
             else:
                 torch.clamp_(self.w, min=0, max=1e6)
             # torch.clamp_(self.w, min=0, max=4)
