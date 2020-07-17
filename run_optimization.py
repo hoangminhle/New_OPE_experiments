@@ -13,8 +13,8 @@ from random import randint
 
 dtype = torch.double
 device = 'cpu'
-initial_seed = randint(0,10000)
-# initial_seed = 4252
+# initial_seed = randint(0,10000)
+initial_seed = 4252
 RUN_SANITY_CHECK = False
 config = {
     'env': 'grid_world', #'grid_world', #'taxi', #'grid_world',
@@ -27,15 +27,15 @@ config = {
     'initial_seed': initial_seed,
     'baseline': ['IS', 'IH', 'MB'],
     'lr_w': 1, #0.1,
-    'objective': ['bias_no_td_regW', 'bias_restricted_td_regW', 'bias_td_regW'], #['bias_no_td_regW','bias_td_regW','bias_no_td_no_regW','bias_td_no_regW'], #['bias_no_td_no_regW'],#['bias_no_td_regW','bias_td_regW','bias_restricted_td_regW'],#['bias_no_td_regW','bias_td_regW','bias_no_td_no_regW','bias_td_no_regW'], #['bias_cf', 'bias_td_v2_cf'],#['bias_cf', 'bias_td_v1_cf', 'bias_td_v2_cf' ], #['bias_td_delay'], #['bias_td', 'bias'],
+    'objective': ['bias_cf', 'bias_opt_cf'],# , 'bias_minmax', 'bias_td_minmax'], #['bias_no_td_regW','bias_td_regW','bias_no_td_no_regW','bias_td_no_regW'], #['bias_no_td_no_regW'],#['bias_no_td_regW','bias_td_regW','bias_restricted_td_regW'],#['bias_no_td_regW','bias_td_regW','bias_no_td_no_regW','bias_td_no_regW'], #['bias_cf', 'bias_td_v2_cf'],#['bias_cf', 'bias_td_v1_cf', 'bias_td_v2_cf' ], #['bias_td_delay'], #['bias_td', 'bias'],
     'penalty_input': 1,
     'reg_w': 'linfty', #'linfty', #'linfty', #or 'l2'
     'coeff_reg_w': 2, #1e-4, #2, # 2 for infinity norm projection, 1e-4 for l2 regularization
     'v_class_cardinality':100,
     'normalizing_factor': 1,
-    'n_iterations': 100000,
+    'n_iterations': 20000,
     'lr_decay': True,
-    'beta': (0,0.999),
+    'beta': (0,0.99),
     'eps': 1e-8,
     'tail_fraction': 0.1,
     'logging': False,
@@ -357,7 +357,8 @@ def main(cfg):
             mvm.set_random_seed(seed_list[i])
             # w_estimator = mvm.optimize_finite_class(objective = objective, td_penalty=penalty*penalty_base)
             # w_estimator = mvm.optimize_discrete(objective = objective, td_penalty=penalty*penalty_base)
-            w_estimator, w_estimator_sn = mvm.optimize_optimistic()
+            w_estimator = mvm.optimize(objective, td_penalty = 0.1)
+            # w_estimator, w_estimator_sn = mvm.optimize_optimistic()
             # w_estimator, w_estimator_sn = mvm.optimize_optimistic_adam(objective = objective, td_penalty=penalty*penalty_base)
             # w_estimator = mvm.optimize_closed_form()
             estimate[objective].append(float(w_estimator))
