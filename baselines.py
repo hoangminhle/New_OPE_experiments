@@ -208,10 +208,12 @@ def model_based(n_state, n_action, SASR, pi, gamma):
     t = np.where(R_count > 0)
     t0 = np.where(R_count == 0)
     R[t] = R[t]/R_count[t]
-    R[t0] = np.mean(R[t])
+    # R[t0] = np.mean(R[t]) #! why should we do this smoothing? skip the smoothing for now
     # T = T + 1e-9	# smoothing #*smoothing step from Lihong's paper implementation, is it a good idea at all?
     # pdb.set_trace()
     T = np.nan_to_num(T/np.sum(T, axis = -1)[:,:,None])
+    #! terminal state should self-loop?
+    T[-1,:,-1] = 1.0
     Tpi = np.zeros([n_state, n_state])
     for state in range(n_state):
         for next_state in range(n_state):

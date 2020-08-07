@@ -1,8 +1,11 @@
 import numpy as np
 import pdb
+import random
 
 FAKE_TRANSITION = False
 def roll_out(env, policy, num_trajectory, truncate_size):
+    # np.random.seed(seed)
+    # random.seed(seed)
     SASR = []
     total_reward = 0.0
     state_num = env.nS
@@ -56,7 +59,7 @@ def exact_calculation(env, policy, horizon, gamma):
     n_actions = env.nA
     d0 = env.isd
     R = env.R_matrix
-    horizon_normalization = (1-gamma**horizon)/(1-gamma)
+    horizon_normalization = (1-gamma**horizon)/(1-gamma) if gamma<1 else horizon
 
     #* calculate true distribution
     P_pi = np.einsum('san, sa-> sn', P,policy)
@@ -74,6 +77,7 @@ def exact_calculation(env, policy, horizon, gamma):
     vpi = np.sum(dpi*Rpi) #* normalized true value
 
     v_s = np.zeros(n_states)
+    
     for s in range(n_states):
         dt = np.zeros(n_states)
         dt[s] = 1.0
@@ -84,6 +88,7 @@ def exact_calculation(env, policy, horizon, gamma):
             dt = np.dot(P_pi.T, dt)
             discounted_t *=gamma
         v_s[s] += np.sum(ds*Rpi)
+
     #* after this step, should have
     #* np.sum(d0*v_s) / horizon_normalization == vpi
 
@@ -95,6 +100,9 @@ def exact_calculation(env, policy, horizon, gamma):
         else:
             v_t_s[:,h] = Rpi + gamma*np.dot(P_pi, v_t_s[:,h+1])
     #* after this step, we should have v_t_s[:,0] == v_s
+    # q_sa = np.zeros(n_states*n_actions)
+    q_sa = (R + gamma*np.dot(P,v_t_s[:,1])).reshape(n_states*n_actions)
+
 
     #! calculate the correction terms to adjust for finite horizon
 
@@ -125,7 +133,7 @@ def exact_calculation(env, policy, horizon, gamma):
     #! the min-max objective loss function would be a bit different from the average and infinite horizon case
     #* L(w,f) = \E_{(s,a,s')\sim d_mu} [ w(s) (f(s) - gamm*rho(s,a)*f(s'))] +1/h E_{s\sim d0} [f(s)] - 1/h *gamma^horizon \E_{s\sim d_pi,H}[f(s)]
     
-    return dpi, dpi_t, v_s, P_pi
+    return dpi, dpi_t, v_s, q_sa, P_pi
 
 
 
