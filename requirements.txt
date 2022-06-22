@@ -3,7 +3,7 @@ tensorflow==1.15.0
 PyVirtualDisplay==0.2.4
 scipy==1.4.1
 matplotlib==3.0.3
-numpy==1.18.4
+numpy==1.22.0
 Keras==2.2.4
 boto3==1.13.2
 pandas==0.24.2
