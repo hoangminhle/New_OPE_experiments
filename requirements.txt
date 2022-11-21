@@ -1,5 +1,5 @@
 gym==0.17.1
-tensorflow==1.15.0
+tensorflow==2.9.3
 PyVirtualDisplay==0.2.4
 scipy==1.4.1
 matplotlib==3.0.3
